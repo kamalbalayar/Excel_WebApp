@@ -45,6 +45,9 @@ def sign_up():
 
         user = User.query.filter_by(email=email).first()
         if user:
+         # Set session variables for the logged-in user
+            session['user_id'] = user[0]
+            session['username'] = user[1]
             flash('Email already exists', category='error')
         elif len(email) < 4:
             flash('Email must be more than 4 characters.', category='error')
@@ -61,5 +64,22 @@ def sign_up():
             return redirect(url_for('views.home'))
         
     return render_template("sign_up.html", user=current_user)
+   
+@auth.route('/home')
+def home():
+    if 'user_id' in session:
+        user_id = session['user_id']
+        username = session['username']
+        # Retrieve user data from the database
+        mycursor = mydb.cursor()
+        sql = "SELECT * FROM users WHERE user_id = %s"
+        val = (user_id,)
+        mycursor.execute(sql, val)
+        user = mycursor.fetchone()
+        # Display personalized content on the home page
+        return render_template('home.html', user=user)
+    else:
+        # Redirect user to the login page
+        return redirect('/')
 
  
